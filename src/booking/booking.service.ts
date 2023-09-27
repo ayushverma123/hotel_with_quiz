@@ -93,7 +93,9 @@ export class BookingService {
       query.sort(sortOptions);
     }
 
-    const data = await query.exec();
+    
+    const Data = await query.exec();
+    const data=Data.reverse();
     const totalRecords = await this.bookingModel.find(query.getFilter()).countDocuments(); 
   
     return { data, totalRecords };
