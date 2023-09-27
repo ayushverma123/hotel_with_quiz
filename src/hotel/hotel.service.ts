@@ -72,7 +72,8 @@ export class HotelService {
       query.sort(sortOptions);
     }
   
-    const data = await query.exec();
+    const Data = await query.exec();
+    const data=Data.reverse();
     
     // Get the total count based on the applied query
     const totalRecords = await this.hotelModel.find(query.getFilter()).countDocuments();
