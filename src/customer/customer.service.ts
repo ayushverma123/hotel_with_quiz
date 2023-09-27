@@ -83,7 +83,9 @@ export class CustomerService {
       query.sort(sortOptions);
     }
 
-    const data = await query.exec();
+    
+    const Data = await query.exec();
+    const data=Data.reverse();
     const totalRecords = await this.customerModel.find(query.getFilter()).countDocuments();
 
     return { data, totalRecords };
