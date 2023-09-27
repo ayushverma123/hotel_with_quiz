@@ -1,22 +1,26 @@
-import { InternalServerErrorException, NotFoundException } from '@nestjs/common';
+  
+   import { InternalServerErrorException, NotFoundException } from '@nestjs/common';    
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, SortOrder } from 'mongoose';
 import { Booking } from '../entities/booking.schema';
-import { CreateBookingDto } from './dto/createBooking-dto';
+import { CreateBookingDto } from './dto/createBooking-dto';    
 import { Customer } from 'src/entities/customer.schema';
 import { GetQueryDto } from './dto/query-dto';
-import { BookingInterfaceResponse } from './interface/BookingResponse-interface';
+import { BookingInterfaceResponse } from './interface/BookingResponse-interface';   
+import { Hotel } from 'src/entities/hotel.schema';
 
 @Injectable()
 export class BookingService {
   constructor(@InjectModel('Booking') private readonly bookingModel: Model<Booking>,
+  @InjectModel('Hotel') private readonly hotelModel: Model<Hotel>,
     @InjectModel('Customer') private readonly customerModel: Model<Customer>) { }
 
-
-  async createBooking(createBookingDto: CreateBookingDto): Promise<BookingInterfaceResponse | null > {
-    const { cusId, ...bookingData } = createBookingDto;
+  async createBooking(createBookingDto: CreateBookingDto): Promise<BookingInterfaceResponse | null > {   
+    const { cusId, hote_id, ...bookingData } = createBookingDto;
     const customer = await this.customerModel.findById(cusId);
+    const hotel = await this.hotelModel.findById(hote_id);
+    console.log(hotel);
     if (!customer) {
       throw new NotFoundException("Invalid customer");
     }
@@ -24,6 +28,11 @@ export class BookingService {
       ...bookingData,
       cusId: customer._id,
       customerID: customer._id,
+      hote_id: hotel._id,
+      hotel: hotel.hotel_name,
+      customer_name: customer.firstName,
+
+
     };
 
     const existingBooking = await this.bookingModel.findOne({
@@ -50,13 +59,12 @@ export class BookingService {
   }
 
 
-  async getFilteredBookings(queryDto: GetQueryDto): Promise<any> {
+  async getFilteredBookings(queryDto: GetQueryDto): Promise<any> {  
     const { search, limit, pageNumber, pageSize, fromDate, toDate, sortField, sortOrder } = queryDto;
     const query = this.bookingModel.find();
 
-
     if (search) {
-      query.or([
+      query.or([ 
         { HotelName: { $regex: search, $options: 'i' } },
         { identity_type: { $regex: search, $options: 'i' } },
         { cus_email: { $regex: search, $options: 'i' } },
@@ -86,7 +94,7 @@ export class BookingService {
     }
 
     const data = await query.exec();
-    const totalRecords = await this.bookingModel.find(query.getFilter()).countDocuments();
+    const totalRecords = await this.bookingModel.find(query.getFilter()).countDocuments(); 
   
     return { data, totalRecords };
   }
@@ -96,7 +104,7 @@ export class BookingService {
   }
 
   async getAllBookings(): Promise<any> {
-    return this.bookingModel.find().exec();
+    return this.bookingModel.find().exec();  
   }
 
   async getAllBooking(): Promise<Booking[]> {
@@ -135,20 +143,20 @@ export class BookingService {
   async getBookingById(id: string): Promise<BookingInterfaceResponse> {
     try {
       const FoundBooking = await this.bookingModel.findById(id).exec();
-
-      if (!FoundBooking) {
+  
+      if (!FoundBooking) {  
         throw new NotFoundException('Unable to find booking');
       }
       else {
 
         return {
           code: 200,
-          message: 'Booking found successfully',
+          message: 'Booking found successfully',   
           status: 'success',
           data: FoundBooking,
         };
       }
-    }
+    }  
     catch (error) {
       // Handle the specific CastError here
       if (error) {
@@ -160,7 +168,7 @@ export class BookingService {
     }
   }
 
-  async updateBooking(id: string, updateBookingDto: CreateBookingDto): Promise<BookingInterfaceResponse> {
+  async updateBooking(id: string, updateBookingDto: CreateBookingDto): Promise<BookingInterfaceResponse> { 
     try {
       const updatedBooking = await this.bookingModel.findByIdAndUpdate(id, updateBookingDto, { new: true }).exec();
 
